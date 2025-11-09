@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>X² - Home Feed</title>
+    <div th:replace="fragments/header :: header-css"></div>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e; /* Dark background */
+            color: #ddd; /* Light gray text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column; /* Stack header and content vertically */
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            margin-top: 15px;
+            padding: 0 15px;
+        }
+        .sidebar {
+            width: 20%;
+            padding: 20px;
+            background-color: #242424; /* Sidebar dark background */
+            height: fit-content;
+            border-radius: 12px;
+            margin-right: 15px;
+            color: #ddd;
+        }
+        .main-content {
+            flex-grow: 1;
+            max-width: 600px;
+        }
+        .post-form, .post {
+            background-color: #242424; /* Post and Form dark background */
+            padding: 20px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Darker shadow */
+            border: 1px solid #333; /* subtle border */
+        }
+        .post-form textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            border: 1px solid #444; /* Dark border */
+            border-radius: 8px;
+            box-sizing: border-box;
+            resize: none;
+            background-color: #333; /* Text area background */
+            color: #ddd; /* Text color */
+        }
+        .post-form button {
+            background-color: #1da1f2;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            float: right;
+            margin-top: 10px;
+        }
+        .post-header strong {
+            margin-right: 10px;
+            color: #1da1f2;
+        }
+        .post-actions .action-button {
+            color: #8899a6; /* Default gray for buttons */
+        }
+        .post-actions .action-button:hover {
+            color: #1da1f2;
+        }
+        .liked {
+            color: #e0245e;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/header :: main-header"></div>
+
+<div class="container">
+    <div class="sidebar">
+        <h3 th:text="'Welcome, @' + ${loggedUser.username}">Welcome, User!</h3>
+        <p>Email: <span th:text="${loggedUser.email}"></span></p>
+
+        <div th:if="${!suggestedUsers.empty}">
+            <h4 style="margin-top: 20px;">Who to follow</h4>
+            <div th:each="suggestedUser : ${suggestedUsers}">
+                <p th:text="'@' + ${suggestedUser.username}" style="margin: 5px 0;"></p>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="main-content">
+        <h2 style="color: white; margin-bottom: 10px;">Home Feed</h2> <div class="post-form">
+        <form th:action="@{/posts/create}" method="post">
+            <textarea name="content" placeholder="What's happening?" required></textarea>
+            <button type="submit">Post</button>
+        </form>
+    </div>
+
+        <div th:each="post : ${posts}" class="post">
+            <div class="post-header">
+                <strong th:text="'@' + ${post.user.username}">User Placeholder</strong>
+                <span th:text="${#temporals.format(post.createdAt, 'MMM dd')}" style="color: #8899a6;"></span>
+            </div>
+
+            <div class="post-content">
+                <p th:text="${post.content}"></p>
+            </div>
+
+            <div class="post-actions">
+                <button class="action-button like-button" th:data-post-id="${post.id}"
+                        th:classappend="${isLikedMap.get(post.id)} ? 'liked' : ''">
+                    <span th:text="${likeCountMap.get(post.id)}">0</span> Likes
+                </button>
+
+                <button class="action-button comment-button" th:data-post-id="${post.id}">
+                    <span th:text="${commentCountMap.get(post.id)}">0</span> Comments
+                </button>
+
+                <button class="action-button">
+                    Share
+                </button>
+            </div>
+
+            <div th:if="${loggedUser.id != post.user.id}" style="margin-top: 10px;">
+                <button class="action-button follow-button"
+                        th:data-following-id="${post.user.id}"
+                        th:style="${isFollowingMap.get(post.user.id) ? 'background-color: gray; color: white; padding: 5px 15px; border-radius: 15px;' : 'background-color: #1da1f2; color: white; padding: 5px 15px; border-radius: 15px;'}">
+                    <span th:text="${isFollowingMap.get(post.user.id) ? 'Following' : 'Follow'}">Follow</span>
+                </button>
+            </div>
+
+            <form th:action="@{'/api/interactions/comment/' + ${post.id}}" method="post" class="comment-form-submit" style="display: none; margin-top: 15px;">
+                <input type="text" name="content" placeholder="Write a comment..." required style="width: 80%; padding: 5px; border-radius: 5px; border: 1px solid #444; background-color: #333; color: #ddd;">
+                <button type="submit" style="background-color: #1da1f2; color: white; border: none; padding: 5px 10px; border-radius: 5px;">Reply</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // --- LIKE BUTTON LOGIC (Remains similar) ---
+        document.querySelectorAll('.like-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const postId = this.getAttribute('data-post-id');
+                const buttonElement = this;
+
+                fetch('/api/interactions/like/' + postId, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        buttonElement.querySelector('span').textContent = data.likeCount;
+                        if (data.liked) {
+                            buttonElement.classList.add('liked');
+                        } else {
+                            buttonElement.classList.remove('liked');
+                        }
+                    } else {
+                        console.error('Like failed:', data.error);
+                    }
+                })
+                .catch(error => console.error('Fetch error:', error));
+            });
+        });
+
+        // --- COMMENT TOGGLE LOGIC ---
+        document.querySelectorAll('.comment-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const postDiv = this.closest('.post');
+                const commentForm = postDiv.querySelector('.comment-form-submit');
+                if (commentForm) {
+                    commentForm.style.display = commentForm.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        });
+
+        // --- COMMENT SUBMISSION LOGIC (New AJAX submission for better UX) ---
+        document.querySelectorAll('.comment-form-submit').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const postId = form.action.substring(form.action.lastIndexOf('/') + 1);
+                const contentInput = form.querySelector('input[name="content"]');
+                const content = contentInput.value;
+
+                if (!content) return;
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `content=${encodeURIComponent(content)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        // Update comment count
+                        const postDiv = form.closest('.post');
+                        const commentButton = postDiv.querySelector('.comment-button span');
+                        commentButton.textContent = data.commentCount;
+
+                        // Clear the input and hide the form
+                        contentInput.value = '';
+                        form.style.display = 'none';
+                    } else {
+                        alert("Error submitting comment: " + data.error);
+                    }
+                })
+                .catch(error => console.error('Comment fetch error:', error));
+            });
+        });
+
+        // --- FOLLOW BUTTON LOGIC (Remains similar) ---
+        document.querySelectorAll('.follow-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const followingId = this.getAttribute('data-following-id');
+                const buttonElement = this;
+
+                const formData = new URLSearchParams();
+                formData.append('followingId', followingId);
+
+                fetch('/api/follow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        const span = buttonElement.querySelector('span');
+                        if (data.following) {
+                            span.textContent = 'Following';
+                            buttonElement.style.backgroundColor = 'gray';
+                        } else {
+                            span.textContent = 'Follow';
+                            buttonElement.style.backgroundColor = '#1da1f2';
+                        }
+                    } else {
+                        console.error('Follow failed:', data.error);
+                    }
+                })
+                .catch(error => console.error('Fetch error:', error));
+            });
+        });
+    });
+</script>
+</body>
+</html>

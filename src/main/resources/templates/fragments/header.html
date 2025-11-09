@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style th:fragment="header-css">
+        .navbar {
+            background-color: #242424; /* Dark background */
+            padding: 10px 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar-content {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar a, .navbar button {
+            color: #ccc; /* Light gray text */
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            font-weight: bold;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .navbar a:hover, .navbar button:hover {
+            background-color: #383838; /* Slightly lighter gray on hover */
+            color: white;
+        }
+        .navbar .logo {
+            font-size: 24px;
+            color: #1da1f2; /* Twitter Blue */
+            padding: 0 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div th:fragment="main-header" class="navbar">
+    <div class="navbar-content">
+        <div class="logo">X²</div>
+
+        <div>
+            <a th:href="@{/posts/feed}">Home</a>
+            <a th:href="@{'/profile/' + ${loggedUser.username}}">Profile</a>
+        </div>
+
+        <div>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

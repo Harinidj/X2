@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${'Profile - @' + profileUser.username}">Profile</title>
+
+    <div th:replace="fragments/header :: header-css"></div>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #ddd;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px; /* Profile pages are typically narrower */
+            margin-top: 15px;
+            padding: 0 15px;
+        }
+        .profile-header {
+            background-color: #242424;
+            padding: 20px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            text-align: center;
+        }
+        .profile-header h2 {
+            color: #1da1f2;
+            margin-bottom: 5px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+        .stat-item {
+            font-weight: bold;
+            color: #ddd;
+        }
+        .post {
+            background-color: #242424;
+            padding: 20px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+        }
+        .post-header strong {
+            margin-right: 10px;
+            color: #1da1f2;
+        }
+        .post-actions .action-button {
+            color: #8899a6;
+        }
+        .liked {
+            color: #e0245e;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/header :: main-header"></div>
+
+<div class="container">
+    <div class="profile-header">
+        <h2 th:text="'@' + ${profileUser.username}">@Username</h2>
+        <p>Joined: <span th:text="${#temporals.format(profileUser.createdAt, 'MMM yyyy')}" style="color: #8899a6;"></span></p>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span th:text="${followerCount}">0</span> Followers
+            </div>
+            <div class="stat-item">
+                <span th:text="${followingCount}">0</span> Following
+            </div>
+            <div class="stat-item">
+                <span th:text="${posts.size()}">0</span> Posts
+            </div>
+        </div>
+
+        <div th:if="${loggedUser.id != profileUser.id}" style="margin-top: 15px;">
+            <button class="action-button follow-button"
+                    th:data-following-id="${profileUser.id}"
+                    th:style="${isFollowing ? 'background-color: gray; color: white; padding: 8px 20px; border-radius: 20px;' : 'background-color: #1da1f2; color: white; padding: 8px 20px; border-radius: 20px;'}">
+                <span th:text="${isFollowing ? 'Following' : 'Follow'}">Follow</span>
+            </button>
+        </div>
+
+        <div th:if="${loggedUser.id == profileUser.id}" style="margin-top: 15px;">
+            <button style="background-color: #333; color: #ddd; padding: 8px 20px; border-radius: 20px; border: 1px solid #555;" disabled>
+                Your Profile
+            </button>
+        </div>
+    </div>
+
+    <h3 style="margin-top: 20px; color: white;">Posts</h3>
+
+    <div th:each="post : ${posts}" class="post">
+        <div class="post-header">
+            <strong th:text="'@' + ${post.user.username}"></strong>
+            <span th:text="${#temporals.format(post.createdAt, 'MMM dd')}" style="color: #8899a6;"></span>
+        </div>
+
+        <div class="post-content">
+            <p th:text="${post.content}"></p>
+        </div>
+
+        <div class="post-actions">
+            <button class="action-button like-button" th:data-post-id="${post.id}"
+                    th:classappend="${isLikedMap.get(post.id)} ? 'liked' : ''">
+                <span th:text="${likeCountMap.get(post.id)}">0</span> Likes
+            </button>
+
+            <button class="action-button comment-button" th:data-post-id="${post.id}">
+                <span th:text="${commentCountMap.get(post.id)}">0</span> Comments
+            </button>
+
+            <button class="action-button">Share</button>
+        </div>
+    </div>
+
+    <div th:if="${posts.isEmpty()}" style="text-align: center; margin-top: 30px;">
+        <p>No posts yet.</p>
+    </div>
+</div>
+
+<script th:src="@{/js/interactions.js}"></script>
+<script th:inline="javascript">
+    // Embed the JavaScript directly here if you haven't split it into a file,
+    // or ensure your main feed JS is available (as shown in the previous response).
+
+    // You will need to copy the JavaScript from the previous response's <script> block
+    // into a new file named src/main/resources/static/js/interactions.js
+    // and link it like this: <script th:src="@{/js/interactions.js}"></script>
+
+ X²: Where every connection counts.
+<script> block from posts/feed.html here.
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login to X²</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #e6ecf0; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-container { background-color: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); width: 350px; }
+        h1 { text-align: center; color: #1da1f2; margin-bottom: 25px; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 12px; margin: 8px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { background-color: #1da1f2; color: white; padding: 14px 20px; margin: 8px 0; border: none; border-radius: 25px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #0c85d0; }
+        .message, .error { text-align: center; padding: 10px; margin-bottom: 15px; border-radius: 6px; font-weight: bold; }
+        .message { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .link { text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h1>Login to X²</h1>
+
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+    <div th:if="${msg}" class="message" th:text="${msg}"></div>
+
+    <form th:action="@{/doLogin}" method="post">
+        <label for="username"><b>Username</b></label>
+        <input type="text" placeholder="Enter Username" name="username" id="username" required>
+
+        <label for="password"><b>Password</b></label>
+        <input type="password" placeholder="Enter Password" name="password" id="password" required>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <div class="link">
+        Don't have an account? <a th:href="@{/register}">Register here</a>
+    </div>
+</div>
+</body>
+</html>
